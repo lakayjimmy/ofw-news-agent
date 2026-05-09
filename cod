@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>OFW Business — News Agent</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;600;400&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --navy:   #0B1C2D;
+    --gold:   #D4880E;
+    --sand:   #FFDEA0;
+    --offwhite: #F7F9FC;
+    --charcoal: #1F2933;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--navy);
+    color: var(--offwhite);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    padding: 0 0 60px;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--navy);
+    border-bottom: 2px solid var(--gold);
+    padding: 20px 24px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .logo-mark {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    color: var(--offwhite);
+    letter-spacing: -0.5px;
+  }
+
+  .logo-mark span { color: var(--gold); }
+
+  .date-badge {
+    font-size: 12px;
+    color: var(--sand);
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    background: rgba(212,136,14,0.12);
+    border: 1px solid rgba(212,136,14,0.3);
+    padding: 4px 10px;
+    border-radius: 20px;
+  }
+
+  /* ── MAIN CONTAINER ── */
+  main {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 28px 20px 0;
+  }
+
+  /* ── SECTION TITLE ── */
+  .section-label {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 16px;
+  }
+
+  /* ── NEWS SOURCE SELECTOR ── */
+  .source-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+  }
+
+  .source-chip {
+    font-size: 12px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1px solid rgba(255,222,160,0.25);
+    background: transparent;
+    color: var(--sand);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .source-chip.active,
+  .source-chip:hover {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: var(--navy);
+  }
+
+  /* ── GENERATE BUTTON ── */
+  .btn-generate {
+    width: 100%;
+    background: var(--gold);
+    color: var(--navy);
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    border: none;
+    border-radius: 10px;
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 28px;
+    letter-spacing: 0.3px;
+  }
+
+  .btn-generate:hover { background: #e09a1a; transform: translateY(-1px); }
+  .btn-generate:active { transform: translateY(0); }
+  .btn-generate:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  .btn-icon { font-size: 18px; }
+
+  /* ── SPINNER ── */
+  .spinner {
+    width: 18px; height: 18px;
+    border: 2px solid rgba(11,28,45,0.3);
+    border-top-color: var(--navy);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: none;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── STATUS PILL ── */
+  .status-pill {
+    text-align: center;
+    font-size: 13px;
+    color: var(--sand);
+    opacity: 0.7;
+    margin-bottom: 20px;
+    min-height: 18px;
+    font-style: italic;
+  }
+
+  /* ── POST CARD ── */
+  .post-card {
+    background: #0f2336;
+    border: 1px solid rgba(212,136,14,0.2);
+    border-radius: 14px;
+    overflow: hidden;
+    display: none;
+    animation: fadeUp 0.4s ease;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .post-card.visible { display: block; }
+
+  /* Card top bar */
+  .card-topbar {
+    background: rgba(212,136,14,0.08);
+    border-bottom: 1px solid rgba(212,136,14,0.15);
+    padding: 12px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .card-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--gold);
+  }
+
+  .card-meta {
+    font-size: 11px;
+    color: rgba(247,249,252,0.45);
+  }
+
+  /* Post content area */
+  .post-content {
+    padding: 22px 20px;
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--offwhite);
+    white-space: pre-wrap;
+    word-break: break-word;
+    min-height: 120px;
+  }
+
+  /* Source reference */
+  .source-ref {
+    padding: 0 20px 16px;
+    font-size: 12px;
+    color: rgba(255,222,160,0.5);
+    font-style: italic;
+  }
+
+  /* Card bottom actions */
+  .card-actions {
+    border-top: 1px solid rgba(212,136,14,0.12);
+    padding: 14px 18px;
+    display: flex;
+    gap: 10px;
+  }
+
+  .btn-copy {
+    flex: 1;
+    background: var(--gold);
+    color: var(--navy);
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    border: none;
+    border-radius: 8px;
+    padding: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-copy:hover { background: #e09a1a; }
+
+  .btn-copy.copied {
+    background: #2a9d5c;
+    color: #fff;
+  }
+
+  .btn-regenerate {
+    background: transparent;
+    color: var(--sand);
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 13px;
+    border: 1px solid rgba(255,222,160,0.25);
+    border-radius: 8px;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .btn-regenerate:hover {
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+
+  /* ── API KEY SECTION ── */
+  .api-section {
+    background: #0f2336;
+    border: 1px solid rgba(212,136,14,0.2);
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 24px;
+  }
+
+  .api-section label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 10px;
+  }
+
+  .api-row {
+    display: flex;
+    gap: 8px;
+  }
+
+  .api-input {
+    flex: 1;
+    background: rgba(11,28,45,0.6);
+    border: 1px solid rgba(212,136,14,0.25);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--offwhite);
+    font-family: 'Inter', sans-serif;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .api-input:focus { border-color: var(--gold); }
+  .api-input::placeholder { color: rgba(247,249,252,0.3); }
+
+  .btn-save-key {
+    background: rgba(212,136,14,0.15);
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    border-radius: 8px;
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .btn-save-key:hover { background: var(--gold); color: var(--navy); }
+
+  .key-status {
+    font-size: 12px;
+    margin-top: 8px;
+    min-height: 16px;
+    color: rgba(255,222,160,0.6);
+  }
+
+  .key-status.ok { color: #2a9d5c; }
+
+  /* ── TIPS BOX ── */
+  .tips-box {
+    background: rgba(212,136,14,0.06);
+    border: 1px solid rgba(212,136,14,0.15);
+    border-radius: 12px;
+    padding: 16px 18px;
+    margin-top: 24px;
+  }
+
+  .tips-box h4 {
+    font-family: 'Poppins', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 10px;
+  }
+
+  .tips-box ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  .tips-box li {
+    font-size: 13px;
+    color: rgba(247,249,252,0.65);
+    padding-left: 16px;
+    position: relative;
+    line-height: 1.5;
+  }
+
+  .tips-box li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: var(--gold);
+    font-size: 11px;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    text-align: center;
+    padding: 40px 24px 0;
+    font-size: 12px;
+    color: rgba(247,249,252,0.25);
+  }
+
+  footer span { color: var(--gold); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-mark">OFW <span>Business</span></div>
+  <div class="date-badge" id="todayDate"></div>
+</header>
+
+<main>
+
+  <!-- API KEY -->
+  <div class="api-section">
+    <label>Groq API Key</label>
+    <div class="api-row">
+      <input class="api-input" type="password" id="apiKeyInput" placeholder="gsk_xxxxxxxxxxxxxxxxxxxxxxxx" />
+      <button class="btn-save-key" onclick="saveKey()">Save</button>
+    </div>
+    <div class="key-status" id="keyStatus"></div>
+  </div>
+
+  <!-- TOPIC SELECTOR -->
+  <div class="section-label">Select News Topic</div>
+  <div class="source-row" id="topicRow">
+    <button class="source-chip active" data-topic="OFW remittance fees and exchange rates">Remittance</button>
+    <button class="source-chip" data-topic="OFW workers rights and labor law abroad">Workers Rights</button>
+    <button class="source-chip" data-topic="Philippines OWWA SSS Pag-IBIG benefits for OFW">Gov Benefits</button>
+    <button class="source-chip" data-topic="OFW business ideas and entrepreneurship Philippines">Business Ideas</button>
+    <button class="source-chip" data-topic="OFW family financial planning savings investment">Financial Tips</button>
+    <button class="source-chip" data-topic="OFW news Middle East Hong Kong Singapore">OFW News</button>
+  </div>
+
+  <!-- GENERATE BUTTON -->
+  <button class="btn-generate" id="generateBtn" onclick="generatePost()">
+    <span class="btn-icon">✦</span>
+    <span id="btnLabel">Generate Today's Post</span>
+    <div class="spinner" id="spinner"></div>
+  </button>
+
+  <!-- STATUS -->
+  <div class="status-pill" id="statusMsg"></div>
+
+  <!-- POST CARD -->
+  <div class="post-card" id="postCard">
+    <div class="card-topbar">
+      <div class="card-label">Ready to Post</div>
+      <div class="card-meta" id="cardMeta"></div>
+    </div>
+    <div class="post-content" id="postContent"></div>
+    <div class="source-ref" id="sourceRef"></div>
+    <div class="card-actions">
+      <button class="btn-copy" id="copyBtn" onclick="copyPost()">📋 Copy Post</button>
+      <button class="btn-regenerate" onclick="generatePost()">↺ New Version</button>
+    </div>
+  </div>
+
+  <!-- TIPS -->
+  <div class="tips-box">
+    <h4>How to Use This Tool</h4>
+    <ul>
+      <li>Save your Groq API key once — it is stored only on your device.</li>
+      <li>Choose a topic that matches what your audience needs today.</li>
+      <li>Click Generate and wait about 10 seconds.</li>
+      <li>Copy the finished post and paste it into Facebook.</li>
+      <li>Use "New Version" if you want a different angle on the same topic.</li>
+    </ul>
+  </div>
+
+</main>
+
+<footer>
+  OFW <span>Business</span> · News Agent · Internal Tool
+</footer>
+
+<script>
+// ── DATE ──
+const dateEl = document.getElementById('todayDate');
+const now = new Date();
+dateEl.textContent = now.toLocaleDateString('en-PH', { weekday:'short', month:'short', day:'numeric', year:'numeric' });
+
+// ── API KEY ──
+const apiKeyInput = document.getElementById('apiKeyInput');
+const keyStatus   = document.getElementById('keyStatus');
+
+function saveKey() {
+  const k = apiKeyInput.value.trim();
+  if (!k.startsWith('gsk_') || k.length < 20) {
+    keyStatus.textContent = 'That does not look like a valid Groq key. It should start with gsk_';
+    keyStatus.className = 'key-status';
+    return;
+  }
+  localStorage.setItem('groq_key', k);
+  keyStatus.textContent = '✓ Key saved on this device';
+  keyStatus.className = 'key-status ok';
+  apiKeyInput.value = '••••••••••••••••••••••••';
+}
+
+window.addEventListener('load', () => {
+  const saved = localStorage.getItem('groq_key');
+  if (saved) {
+    apiKeyInput.value = '••••••••••••••••••••••••';
+    keyStatus.textContent = '✓ Key saved on this device';
+    keyStatus.className = 'key-status ok';
+  }
+});
+
+// ── TOPIC SELECTOR ──
+let activeTopic = 'OFW remittance fees and exchange rates';
+document.getElementById('topicRow').addEventListener('click', e => {
+  const chip = e.target.closest('.source-chip');
+  if (!chip) return;
+  document.querySelectorAll('.source-chip').forEach(c => c.classList.remove('active'));
+  chip.classList.add('active');
+  activeTopic = chip.dataset.topic;
+});
+
+// ── GENERATE ──
+async function generatePost() {
+  const key = localStorage.getItem('groq_key');
+  if (!key) {
+    setStatus('Please save your Groq API key first.');
+    return;
+  }
+
+  setLoading(true);
+  setStatus('Finding latest news and writing your post…');
+
+  const prompt = `You are a warm, clear, and trustworthy social media writer for OFW Business — a Facebook page serving Overseas Filipino Workers around the world.
+
+Your task: Write ONE complete Facebook post about this topic: "${activeTopic}"
+
+The post must:
+- Open with a short, attention-grabbing question or statement (1 sentence)
+- Explain the key news or insight in plain, simple English (3 to 4 sentences)
+- Use a warm, encouraging tone — speak directly to OFWs as capable adults
+- End with a clear, single call to action (example: "Share this with a fellow OFW." or "Save this post for reference.")
+- Include 4 to 6 relevant hashtags on the last line (examples: #OFW #OFWBusiness #OFWLife #Remittance)
+- Be between 120 and 180 words total
+- Never use jargon, hype, or all-caps body text
+- Never fabricate specific statistics or claim a specific news article exists
+
+Write only the Facebook post text. No titles. No labels. No explanations. Start directly with the opening line.`;
+
+  try {
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${key}`
+      },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        max_tokens: 400,
+        temperature: 0.75,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error?.message || `API error ${res.status}`);
+    }
+
+    const data = await res.json();
+    const post = data.choices?.[0]?.message?.content?.trim();
+
+    if (!post) throw new Error('No content returned. Please try again.');
+
+    showPost(post);
+    setStatus('');
+
+  } catch (err) {
+    setStatus('Something went wrong: ' + err.message);
+  } finally {
+    setLoading(false);
+  }
+}
+
+function showPost(text) {
+  const card    = document.getElementById('postCard');
+  const content = document.getElementById('postContent');
+  const meta    = document.getElementById('cardMeta');
+  const copyBtn = document.getElementById('copyBtn');
+
+  content.textContent = text;
+  meta.textContent = new Date().toLocaleTimeString('en-PH', { hour:'2-digit', minute:'2-digit' });
+
+  card.classList.add('visible');
+  copyBtn.textContent = '📋 Copy Post';
+  copyBtn.classList.remove('copied');
+
+  card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ── COPY ──
+async function copyPost() {
+  const text = document.getElementById('postContent').textContent;
+  const btn  = document.getElementById('copyBtn');
+  try {
+    await navigator.clipboard.writeText(text);
+    btn.textContent = '✓ Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = '📋 Copy Post';
+      btn.classList.remove('copied');
+    }, 3000);
+  } catch {
+    btn.textContent = 'Select text above to copy';
+  }
+}
+
+// ── HELPERS ──
+function setLoading(on) {
+  const btn     = document.getElementById('generateBtn');
+  const label   = document.getElementById('btnLabel');
+  const spinner = document.getElementById('spinner');
+  btn.disabled        = on;
+  label.textContent   = on ? 'Writing your post…' : 'Generate Today\'s Post';
+  spinner.style.display = on ? 'block' : 'none';
+}
+
+function setStatus(msg) {
+  document.getElementById('statusMsg').textContent = msg;
+}
+</script>
+</body>
+</html>
